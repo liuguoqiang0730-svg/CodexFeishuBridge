@@ -1,0 +1,6 @@
+﻿{
+  "projectsRoot": "E:\\Codex-AI-Coding",
+  "excludeProjectNames": ["CodexFeishuBridge"],
+  "defaultModel": "gpt-5.5",
+  "defaultEffort": "medium"
+}

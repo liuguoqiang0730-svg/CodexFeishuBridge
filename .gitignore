@@ -1,0 +1,9 @@
+﻿node_modules/
+dist/
+.env
+config/projects.json
+config/sessions.json
+*.log
+.DS_Store
+.tmp-schemas/
+
