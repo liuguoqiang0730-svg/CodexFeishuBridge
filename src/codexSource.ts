@@ -153,12 +153,31 @@ function loadHistoricalThreads(config: AppConfig): IndexedThread[] {
     .sort((a, b) => Date.parse(b.updatedAt || "") - Date.parse(a.updatedAt || ""));
 }
 
+function threadSortValue(thread: IndexedThread): number {
+  const parsed = Date.parse(thread.updatedAt || "");
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function mergeThreadSources(...sources: Array<IndexedThread[] | null | undefined>): IndexedThread[] {
+  const byId = new Map<string, IndexedThread>();
+  for (const source of sources) {
+    for (const thread of source || []) {
+      if (!thread.cwd) continue;
+      const existing = byId.get(thread.id);
+      if (!existing || threadSortValue(thread) > threadSortValue(existing)) {
+        byId.set(thread.id, thread);
+      }
+    }
+  }
+  return [...byId.values()].sort((a, b) => threadSortValue(b) - threadSortValue(a));
+}
+
 function loadProjectSourceThreads(config: AppConfig): IndexedThread[] {
-  const visibleDesktop = loadVisibleDesktopThreads(config);
-  if (visibleDesktop && visibleDesktop.length) return visibleDesktop;
-  const catalog = loadCatalogThreads(config);
-  if (catalog && catalog.length) return catalog;
-  return loadHistoricalThreads(config);
+  return mergeThreadSources(
+    loadVisibleDesktopThreads(config),
+    loadCatalogThreads(config),
+    loadHistoricalThreads(config),
+  );
 }
 
 function loadThreadsForProject(config: AppConfig, projectId: string | null): IndexedThread[] {
@@ -249,5 +268,6 @@ export async function sendToCodexThread(config: AppConfig, threadId: string, pro
   const output = await runCodexExecResume(config, threadId, prompt, config.defaultModel, config.defaultEffort, thread?.cwd);
   return { available: true, items: [output] };
 }
+
 
 
