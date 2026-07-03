@@ -137,7 +137,11 @@ async function useProject(config: AppConfig, state: SessionState, name: string):
     state.activeThread = null;
     state.activeCodexThreadId = null;
     saveState(state);
-    return { ok: true, text: `已选择项目：${project.name}\n下一步：/threads` };
+    const projectThreads = await listCodexThreads(config, project.id);
+    const threadText = projectThreads.available && projectThreads.items.length
+      ? formatThreads(projectThreads.items)
+      : "当前 Codex 项目没有发现会话。\n\n0. 新开一个会话（发送 /new thread <标题>，待接 Codex 内部接口）";
+    return { ok: true, text: [`已选择项目：${project.name}`, "", threadText].join("\n") };
   }
 
   const fallback = findFallbackFolderProject(config, name);
@@ -223,5 +227,6 @@ async function ask(config: AppConfig, state: SessionState, prompt: string): Prom
   saveState(state);
   return { ok: true, text: `通过文件夹兜底执行 codex exec，不是继续 Codex 桌面已有会话。\n\n${output}` };
 }
+
 
 
